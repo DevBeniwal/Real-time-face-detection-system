@@ -1,0 +1,31 @@
+import cv2
+import numpy as np
+import glob
+
+# Directory path where the face images are stored
+path = './images/'
+recognizer = cv2.face.LBPHFaceRecognizer_create()
+detector = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+
+def getImagesAndLabels(path):
+    imagePaths = glob.glob(path + '*.jpg')
+    faceSamples = []
+    ids = []
+
+    for imagePath in imagePaths:
+        img = cv2.imread(imagePath, 0)  # Read the image directly as grayscale
+        id = int(os.path.splitext(os.path.basename(imagePath))[0].split(".")[1])
+        faces = detector.detectMultiScale(img, scaleFactor=1.2, minNeighbors=5, minSize=(30, 30))
+
+        for (x, y, w, h) in faces:
+            faceSamples.append(img[y:y + h, x:x + w])
+            ids.append(id)
+
+    return faceSamples, ids
+
+print("[INFO] Training faces...")
+faces, ids = getImagesAndLabels(path)
+recognizer.train(faces, np.array(ids))
+# Save the model
+recognizer.write('trainer.yml')
+print("[INFO] Training completed. {0} faces trained. Exiting Program".format(len(np.unique(ids))))
